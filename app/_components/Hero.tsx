@@ -1,6 +1,7 @@
-"use client"
-import { motion } from 'motion/react'
-import React from 'react'
+"use client";
+import { motion } from "motion/react";
+import Link from "next/link";
+import React from "react";
 
 function Hero() {
   return (
@@ -47,7 +48,9 @@ function Hero() {
           }}
           className="relative z-10 mx-auto max-w-xl py-4 text-center text-lg font-normal text-neutral-600 dark:text-neutral-400"
         >
-          Prepare for your dream role with interactive AI avatars that mimic real recruiters. Get instants insights, refine your communication skills, and walk into every interview with confidecne
+          Prepare for your dream role with interactive AI avatars that mimic
+          real recruiters. Get instants insights, refine your communication
+          skills, and walk into every interview with confidecne
         </motion.p>
         <motion.div
           initial={{
@@ -62,9 +65,11 @@ function Hero() {
           }}
           className="relative z-10 mt-8 flex flex-wrap items-center justify-center gap-4"
         >
-          <button className="w-60 transform rounded-lg bg-black px-6 py-4 font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary dark:bg-white dark:text-black dark:hover:bg-gray-200">
-            Explore Now
-          </button>
+          <Link href={"/dashboard"}>
+            <button className="w-60 transform rounded-lg bg-black px-6 py-4 font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary dark:bg-white dark:text-black dark:hover:bg-gray-200">
+              Explore Now
+            </button>
+          </Link>
           <button className="w-60 transform rounded-lg border border-gray-300 bg-white px-6 py-4 font-bold text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-gray-100 dark:border-gray-700 dark:bg-black dark:text-white dark:hover:bg-gray-900">
             Contact Support
           </button>
@@ -96,7 +101,7 @@ function Hero() {
         </motion.div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Hero
+export default Hero;

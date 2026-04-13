@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Itim } from "next/font/google";
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -8,9 +9,9 @@ export const metadata: Metadata = {
 };
 
 const itim = Itim({
-  subsets: ['latin'],
-  weight: "400"
-})
+  subsets: ["latin"],
+  weight: "400",
+});
 
 export default function RootLayout({
   children,
@@ -18,8 +19,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={itim.className}>{children}</body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className={itim.className}>{children}</body>
+      </html>
+    </ClerkProvider>
   );
 }
