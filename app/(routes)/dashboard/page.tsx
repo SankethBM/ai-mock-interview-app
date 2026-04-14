@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import EmptyState from "./EmptyState";
+import CreateInterviewDialog from "../_components/CreateInterviewDialog";
 
 function Dashboard() {
   const user = useUser();
@@ -15,7 +16,7 @@ function Dashboard() {
           <h2 className="text-lg text-grey-500">My Dashboard</h2>
           <h2 className="text-3xl font-bold">Welcome, {user.user?.fullName}</h2>
         </div>
-        <Button className="p-6 hover:scale-105">+ Create Interview</Button>
+        <CreateInterviewDialog />
       </div>
       {interviewList?.length == 0 && <EmptyState />}
     </div>
