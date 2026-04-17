@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -13,17 +13,52 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import ResumeUpload from "./ResumeUpload";
 import JobDesription from "./JobDesription";
+import axios from "axios";
+import { Loader2Icon } from "lucide-react";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { UserDetailContext } from "@/context/UserDetailContext";
 
 function CreateInterviewDialog() {
+  const [formData, setFormData] = useState<any>();
+  const [file, setFile] = useState<File | null>();
+  const [loading, setLoading] = useState(false);
+  const {userDetail, setUserDetail} = useContext(UserDetailContext);
+  const saveInterviewQuestion = useMutation(api.interview.saveInterviewQuestion)
 
-    const [formData, setFormData] = useState<any>();
+  const onHandleInputChange = (field: string, value: string) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
 
-  const onHandleInputChange = (field:string, value:string) =>  {
-    setFormData((prev:any) => ({
-        ...prev,
-        [field]:value
-    }))
-  }
+  const onSubmit = async () => {
+    if (!file) return null;
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await axios.post(
+        "api/generate-interview-questions",
+        formData,
+      );
+      console.log(res.data);
+      // save the data tot DB
+      //@ts-ignore
+      const resp = await saveInterviewQuestion({
+        questions:res.data?.questions,
+        resumeUrl: res?.data?.resumeUrl,
+        uid: userDetail?._id
+      })
+      console.log(resp)
+
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Dialog>
@@ -34,7 +69,9 @@ function CreateInterviewDialog() {
       </DialogTrigger>
       <DialogContent className="min-w-3xl">
         <DialogHeader>
-          <DialogTitle className="text-center p-4 font-bold" >Please enter the following details !</DialogTitle>
+          <DialogTitle className="text-center p-4 font-bold">
+            Please enter the following details !
+          </DialogTitle>
           <DialogDescription>
             <Tabs defaultValue="resume-upload" className="w-full mt-5">
               <div className="flex justify-center">
@@ -47,7 +84,7 @@ function CreateInterviewDialog() {
               </div>
 
               <TabsContent value="resume-upload">
-                <ResumeUpload />
+                <ResumeUpload setFiles={(file: File) => setFile(file)} />
               </TabsContent>
               <TabsContent value="job-description">
                 <JobDesription onHandleInputChange={onHandleInputChange} />
@@ -61,7 +98,14 @@ function CreateInterviewDialog() {
               Cancel
             </Button>
           </DialogClose>
-          <Button className="p-6 hover:scale-105">Submit</Button>
+          <Button
+            className="p-6 hover:scale-105"
+            onClick={onSubmit}
+            disabled={loading || !file}
+          >
+            {" "}
+            {loading && <Loader2Icon className="animate-spin" />}Submit
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
