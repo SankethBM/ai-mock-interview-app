@@ -34,7 +34,7 @@ function CreateInterviewDialog() {
       </DialogTrigger>
       <DialogContent className="min-w-3xl">
         <DialogHeader>
-          <DialogTitle>Please enter the following details !</DialogTitle>
+          <DialogTitle className="text-center p-4 font-bold" >Please enter the following details !</DialogTitle>
           <DialogDescription>
             <Tabs defaultValue="resume-upload" className="w-full mt-5">
               <div className="flex justify-center">
