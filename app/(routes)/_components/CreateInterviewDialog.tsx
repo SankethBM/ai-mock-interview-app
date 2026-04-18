@@ -23,8 +23,10 @@ function CreateInterviewDialog() {
   const [formData, setFormData] = useState<any>();
   const [file, setFile] = useState<File | null>();
   const [loading, setLoading] = useState(false);
-  const {userDetail, setUserDetail} = useContext(UserDetailContext);
-  const saveInterviewQuestion = useMutation(api.interview.saveInterviewQuestion)
+  const { userDetail, setUserDetail } = useContext(UserDetailContext);
+  const saveInterviewQuestion = useMutation(
+    api.interview.saveInterviewQuestion,
+  );
 
   const onHandleInputChange = (field: string, value: string) => {
     setFormData((prev: any) => ({
@@ -34,25 +36,31 @@ function CreateInterviewDialog() {
   };
 
   const onSubmit = async () => {
-    if (!file) return null;
+    // if (!file) return null;
     setLoading(true);
-    const formData = new FormData();
-    formData.append("file", file);
+    const formData_ = new FormData();
+    formData_.append("file", file ?? "");
+    formData_?.append("jobTitle", formData?.jobTitle);
+    formData_?.append("jobDescription", formData?.jobDescription);
     try {
       const res = await axios.post(
         "api/generate-interview-questions",
-        formData,
+        formData_,
       );
       console.log(res.data);
       // save the data tot DB
       //@ts-ignore
-      const resp = await saveInterviewQuestion({
-        questions:res.data?.questions,
-        resumeUrl: res?.data?.resumeUrl,
-        uid: userDetail?._id
-      })
-      console.log(resp)
 
+      const questions = res.data?.questions?.[0]?.interview_questions ?? [];
+
+      const resp = await saveInterviewQuestion({
+        questions,
+        resumeUrl: res?.data?.resumeUrl ?? null,
+        uid: userDetail?._id,
+        jobTitle: formData?.jobTitle ?? null,
+        jobDescription: formData?.jobDescription ?? null,
+      });
+      console.log(resp);
     } catch (e) {
       console.log(e);
     } finally {
@@ -101,7 +109,12 @@ function CreateInterviewDialog() {
           <Button
             className="p-6 hover:scale-105"
             onClick={onSubmit}
-            disabled={loading || !file}
+            disabled={
+              loading ||
+              (!file &&
+                (!formData?.jobTitle?.trim() ||
+                  !formData?.jobDescription?.trim()))
+            }
           >
             {" "}
             {loading && <Loader2Icon className="animate-spin" />}Submit

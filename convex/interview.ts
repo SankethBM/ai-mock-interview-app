@@ -5,7 +5,9 @@ export const saveInterviewQuestion = mutation({
   args: {
     questions: v.any(),
     uid: v.id("UserTable"),
-    resumeUrl: v.string(),
+    resumeUrl: v.union(v.string(), v.null()),
+    jobTitle: v.union(v.string(), v.null()),
+    jobDescription: v.union(v.string(), v.null()),
   },
   handler: async (ctx, args) => {
     const result = await ctx.db.insert("InterviewSessionTable", {
@@ -13,6 +15,8 @@ export const saveInterviewQuestion = mutation({
       resumeUrl: args.resumeUrl,
       userId: args.uid,
       status: "draft",
+      jobTitle: args.jobTitle,
+      JobDesription: args.jobDescription
     });
     return result;
   },
