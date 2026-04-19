@@ -1,3 +1,5 @@
+import { aj } from "@/utils/arcjet";
+import { currentUser } from "@clerk/nextjs/server";
 import axios from "axios";
 import { error } from "console";
 import ImageKit from "imagekit";
@@ -11,10 +13,25 @@ var imagekit = new ImageKit({
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await currentUser();
     const formData = await req.formData();
     const file = formData.get("file") as File;
     const jobTitle = formData.get("jobTitle") as File;
     const jobDescription = formData.get("jobDescription") as File;
+
+    const decision = await aj.protect(req, {
+      userId: user?.primaryEmailAddress?.emailAddress ?? "",
+      requested: 5,
+    }); // Deduct 5 tokens from the bucket
+    console.log("Arcjet decision", decision);
+
+    //@ts-ignore  
+    if (decision?.reason?.remaining == 0) {
+      return NextResponse.json({
+        status: 429,
+        result: "No Free credits remaining, Try again after 24 hours",
+      });
+    }
 
     // if (!file) {
     //   return NextResponse.json({ error: "No File Found !" }, { status: 404 });
@@ -44,14 +61,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         questions: result.data,
         resumeUrl: uploadResponse?.url,
+        status:200
       });
-    }else{
+    } else {
       const result = await axios.post(
         "http://localhost:5678/webhook/generate-interview-question",
         {
           resumeUrl: null,
           jobTitle: jobTitle,
-          jobDescription: jobDescription
+          jobDescription: jobDescription,
         },
       );
 

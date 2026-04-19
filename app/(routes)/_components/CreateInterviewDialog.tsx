@@ -42,12 +42,19 @@ function CreateInterviewDialog() {
     formData_.append("file", file ?? "");
     formData_?.append("jobTitle", formData?.jobTitle);
     formData_?.append("jobDescription", formData?.jobDescription);
+
     try {
       const res = await axios.post(
         "api/generate-interview-questions",
         formData_,
       );
       console.log(res.data);
+
+      if(res?.data?.status == 429){
+        console.log(res?.data?.result)
+        return;
+      }
+
       // save the data tot DB
       //@ts-ignore
 
@@ -60,6 +67,7 @@ function CreateInterviewDialog() {
         jobTitle: formData?.jobTitle ?? null,
         jobDescription: formData?.jobDescription ?? null,
       });
+
       console.log(resp);
     } catch (e) {
       console.log(e);
