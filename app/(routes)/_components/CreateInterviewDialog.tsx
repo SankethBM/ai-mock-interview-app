@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -15,9 +15,6 @@ import ResumeUpload from "./ResumeUpload";
 import JobDesription from "./JobDesription";
 import axios from "axios";
 import { Loader2Icon } from "lucide-react";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { UserDetailContext } from "@/context/UserDetailContext";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -25,11 +22,7 @@ function CreateInterviewDialog() {
   const [formData, setFormData] = useState<any>();
   const [file, setFile] = useState<File | null>();
   const [loading, setLoading] = useState(false);
-  const { userDetail, setUserDetail } = useContext(UserDetailContext);
-  const router = useRouter()
-  const saveInterviewQuestion = useMutation(
-    api.interview.saveInterviewQuestion,
-  );
+  const router = useRouter();
 
   const onHandleInputChange = (field: string, value: string) => {
     setFormData((prev: any) => ({
@@ -39,45 +32,36 @@ function CreateInterviewDialog() {
   };
 
   const onSubmit = async () => {
-    // if (!file) return null;
     setLoading(true);
     const formData_ = new FormData();
-    formData_.append("file", file ?? "");
-    formData_?.append("jobTitle", formData?.jobTitle);
-    formData_?.append("jobDescription", formData?.jobDescription);
+    if (file) formData_.append("file", file);
+    if (formData?.jobTitle) formData_.append("jobTitle", formData.jobTitle);
+    if (formData?.jobDescription) formData_.append("jobDescription", formData.jobDescription);
 
     try {
-      const res = await axios.post(
-        "api/generate-interview-questions",
-        formData_,
-      );
-      console.log(res.data);
-
-      if(res?.data?.status == 429){
-        toast.warning(res?.data?.result)
-        console.log(res?.data?.result)
+      const res = await axios.post("/api/generate-interview-questions", formData_);
+      
+      if (res.data?.status === 429) {
+        toast.warning(res.data?.result || "No free credits left");
         return;
       }
 
-      // save the data tot DB
-      //@ts-ignore
+      if (res.data?.error) {
+        toast.error(res.data.error);
+        return;
+      }
 
-      const questions = res.data?.questions?.[0]?.interview_questions ?? [];
+      const { interviewId } = res.data;
+      if (!interviewId) {
+        toast.error("Failed to create interview session");
+        return;
+      }
 
-      const interviewId = await saveInterviewQuestion({
-        questions,
-        resumeUrl: res?.data?.resumeUrl ?? null,
-        uid: userDetail?._id,
-        jobTitle: formData?.jobTitle ?? null,
-        jobDescription: formData?.jobDescription ?? null,
-      });
-
-      // console.log(resp);
-
-      router.push('/interview/'+interviewId)
-
-    } catch (e) {
-      console.log(e);
+      router.push(`/interview/${interviewId}/start`);
+      toast.success("Interview created successfully!");
+    } catch (error: any) {
+      console.error("Submission error:", error);
+      toast.error(error.response?.data?.error || "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -85,15 +69,15 @@ function CreateInterviewDialog() {
 
   return (
     <Dialog>
-      <DialogTrigger>
+      <DialogTrigger asChild>
         <Button className="p-6 hover:scale-105 cursor-pointer mb-12">
-          + Create Intervieww
+          + Create Interview
         </Button>
       </DialogTrigger>
       <DialogContent className="min-w-3xl">
         <DialogHeader>
           <DialogTitle className="text-center p-4 font-bold">
-            Please enter the following details !
+            Please enter the following details!
           </DialogTitle>
           <DialogDescription>
             <Tabs defaultValue="resume-upload" className="w-full mt-5">
@@ -116,8 +100,8 @@ function CreateInterviewDialog() {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex gap-6">
-          <DialogClose>
-            <Button variant={"ghost"} className="p-6">
+          <DialogClose asChild>
+            <Button variant="ghost" className="p-6">
               Cancel
             </Button>
           </DialogClose>
@@ -131,8 +115,8 @@ function CreateInterviewDialog() {
                   !formData?.jobDescription?.trim()))
             }
           >
-            {" "}
-            {loading && <Loader2Icon className="animate-spin" />}Submit
+            {loading && <Loader2Icon className="animate-spin mr-2" />}
+            Submit
           </Button>
         </DialogFooter>
       </DialogContent>

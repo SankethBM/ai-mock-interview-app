@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 
 export const CreateNewUser = mutation({
   args: {
@@ -8,29 +8,28 @@ export const CreateNewUser = mutation({
     imageUrl: v.string(),
   },
   handler: async (ctx, args) => {
-    // If user already exists
-    const user = await ctx.db
+    const existing = await ctx.db
       .query("UserTable")
       .filter((q) => q.eq(q.field("email"), args.email))
-      .collect();
+      .first();
+    if (existing) return existing;
 
-    // If not then insert new user to DB
-    if (user?.length == 0) {
-      const data = {
-        email: args.email,
-        imageUrl: args.imageUrl,
-        name: args.name,
-      };
+    const id = await ctx.db.insert("UserTable", {
+      name: args.name,
+      email: args.email,
+      imageUrl: args.imageUrl,
+    });
+    return await ctx.db.get(id);
+  },
+});
 
-      const result = await ctx.db.insert("UserTable", { ...data });
-
-      console.log(result);
-      return {
-        ...data,
-        result
-        // _id:result._id
-      };
-    }
-    return user[0];
+// ✅ This query must be exported
+export const GetUserByEmail = query({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("UserTable")
+      .filter((q) => q.eq(q.field("email"), args.email))
+      .first();
   },
 });

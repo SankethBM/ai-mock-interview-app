@@ -128,3 +128,9 @@
     @apply font-sans;
   }
 }
+
+.bg-grid-slate-100 {
+  background-image: linear-gradient(to right, #f1f5f9 1px, transparent 1px),
+    linear-gradient(to bottom, #f1f5f9 1px, transparent 1px);
+  background-size: 4rem 4rem;
+}
